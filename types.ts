@@ -1,16 +1,13 @@
 
-// Transaction types for tracking financial operations
 export enum TransactionType {
   DEPOSIT = 'DEPOSIT',
   WITHDRAWAL = 'WITHDRAWAL',
   PURCHASE = 'PURCHASE',
   REFUND = 'REFUND',
-  // Added missing transaction types
-  EARNING = 'EARNING',
   REFERRAL = 'REFERRAL',
+  EARNING = 'EARNING'
 }
 
-// Status of financial transactions
 export enum TransactionStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
@@ -18,7 +15,6 @@ export enum TransactionStatus {
   COMPLETED = 'COMPLETED',
 }
 
-// Status of e-commerce orders
 export enum OrderStatus {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
@@ -27,7 +23,6 @@ export enum OrderStatus {
   COMPLETED = 'COMPLETED',
 }
 
-// User account information
 export interface User {
   id: string;
   phone: string;
@@ -41,9 +36,10 @@ export interface User {
   avatar_url?: string;
   full_name?: string;
   bio?: string;
+  member_level?: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
+  loyalty_points?: number;
 }
 
-// Product catalog item
 export interface Product {
   id: string;
   name: string;
@@ -54,10 +50,18 @@ export interface Product {
   category: string;
   stock_quantity: number;
   is_active: boolean;
+  is_trending?: boolean;
   created_at: number;
 }
 
-// Shopping cart item
+export interface WishlistItem {
+  id: string;
+  user_id: string;
+  product_id: string;
+  product?: Product;
+  created_at: number;
+}
+
 export interface CartItem {
   id: string;
   user_id: string;
@@ -66,7 +70,6 @@ export interface CartItem {
   product?: Product;
 }
 
-// Customer order details
 export interface Order {
   id: string;
   user_id: string;
@@ -86,7 +89,6 @@ export interface Order {
   product_image?: string;
 }
 
-// Financial transaction record
 export interface Transaction {
   id: string;
   userId: string;
@@ -100,38 +102,34 @@ export interface Transaction {
   details?: string;
 }
 
-// In-app notification
 export interface AppNotification {
   id: string;
-  userId: string;
+  user_id: string;
   title: string;
   message: string;
-  date: number;
+  type: 'success' | 'error' | 'warning' | 'info';
   read: boolean;
-  type: 'info' | 'success' | 'warning' | 'error';
+  date: number;
 }
 
-// Added missing VIP Package interface
-export interface VipPackage {
-  id: number;
-  name: string;
-  price: number;
+export interface UserProduct {
+  id: string;
+  userId: string;
+  vipName: string;
   dailyRate: number;
-  duration: number;
-  image: string;
+  expiryDate: number;
+  lastRewardDate: number;
 }
 
-// Added missing Staking Pool interfaces
 export interface StakingPool {
   id: string;
   name: string;
-  targetLiquidity: number;
-  currentLiquidity: number;
-  minEntry: number;
-  estimatedApy: number;
-  status: 'FILLING' | 'ACTIVE' | 'COMPLETED';
-  participants: number;
   tier: 'ALPHA' | 'SIGMA' | 'OMEGA';
+  participants: number;
+  estimatedApy: number;
+  currentLiquidity: number;
+  targetLiquidity: number;
+  minEntry: number;
 }
 
 export interface UserStake {
@@ -142,45 +140,29 @@ export interface UserStake {
   stakedAt: number;
 }
 
-// Added missing User Product interface for earnings tracking
-export interface UserProduct {
-  id: string;
-  userId: string;
-  vipName: string;
-  dailyRate: number;
-  expiryDate: number;
-  lastRewardDate: number;
-}
-
-// Added missing Bond interfaces
 export interface BondTemplate {
   id: string;
   name: string;
   description: string;
+  tierLabel: string;
   durationDays: number;
   interestRatePercent: number;
   minInvestment: number;
-  tierLabel: string;
 }
 
 export interface UserBond {
   id: string;
   userId: string;
-  bondId: string;
   bondName: string;
-  amount: number;
-  totalReturn: number;
-  startDate: number;
   endDate: number;
-  status: 'ACTIVE' | 'COMPLETED';
+  totalReturn: number;
 }
 
-// Added missing Epoch interfaces
 export interface TrainingEpoch {
   id: string;
   name: string;
-  minInvestment: number;
   rewardMultiplier: number;
+  minInvestment: number;
   currentFilled: number;
   totalTarget: number;
 }
@@ -190,5 +172,4 @@ export interface UserEpochInvestment {
   userId: string;
   epochId: string;
   amount: number;
-  investedAt: number;
 }

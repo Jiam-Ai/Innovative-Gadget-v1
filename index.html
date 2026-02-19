@@ -1,5 +1,6 @@
+
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -12,17 +13,10 @@
           extend: {
             colors: {
               emerald: {
-                50: '#ecfdf5',
-                100: '#d1fae5',
-                200: '#a7f3d0',
-                300: '#6ee7b7',
-                400: '#34d399',
-                500: '#10b981',
-                600: '#059669',
-                700: '#047857',
-                800: '#065f46',
-                900: '#064e3b',
-              },
+                DEFAULT: '#10b981',
+                light: '#34d399',
+                deep: '#064e3b'
+              }
             },
           },
         },
@@ -30,123 +24,77 @@
     </script>
     <link rel="icon" type="image/jpeg" href="https://files.catbox.moe/xl3z0v.jpeg">
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+      
       :root {
-        --app-bg: #f1f5f9;
-        --app-surface: #ffffff;
-        --app-text: #0f172a;
-        --app-border: rgba(0, 0, 0, 0.08);
-        --app-grid: rgba(16, 185, 129, 0.04);
-        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-bg: rgba(15, 15, 15, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.08);
       }
 
-      .dark {
-        --app-bg: #050505;
-        --app-surface: #0a0a0a;
-        --app-text: #f8fafc;
-        --app-border: rgba(255, 255, 255, 0.05);
-        --app-grid: rgba(16, 185, 129, 0.02);
-        --glass-bg: rgba(10, 10, 10, 0.75);
-      }
-
-      html {
-        scroll-behavior: smooth;
-        transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      }
       body {
         font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background-color: var(--app-bg);
-        color: var(--app-text);
-        -webkit-tap-highlight-color: transparent;
+        background-color: #050505;
+        background-image: 
+          radial-gradient(at 0% 0%, hsla(161, 84%, 39%, 0.07) 0, transparent 50%), 
+          radial-gradient(at 50% 0%, hsla(222, 100%, 50%, 0.05) 0, transparent 50%), 
+          radial-gradient(at 100% 0%, hsla(280, 100%, 50%, 0.05) 0, transparent 50%);
+        background-attachment: fixed;
+        color: white;
         overflow-x: hidden;
+        min-height: 100vh;
       }
 
-      /* Custom Thin Scrollbar */
+      .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      }
+
+      .btn-primary {
+        background: #10b981;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.1);
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+      }
+
+      .input-glass {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.2s ease;
+      }
+
+      .input-glass:focus {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: #10b981;
+        outline: none;
+      }
+
       ::-webkit-scrollbar {
-        width: 4px;
+        width: 6px;
       }
       ::-webkit-scrollbar-track {
         background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
+        background: rgba(255, 255, 255, 0.1);
         border-radius: 10px;
       }
-      .dark ::-webkit-scrollbar-thumb {
-        background: #334155;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
 
-      .obsidian-bg {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: -1;
-        background: radial-gradient(circle at 50% 0%, var(--app-surface) 0%, var(--app-bg) 100%);
-      }
-
-      .mesh-grid {
-        position: absolute;
-        inset: 0;
-        background-image: linear-gradient(var(--app-grid) 1px, transparent 1px),
-                          linear-gradient(90deg, var(--app-grid) 1px, transparent 1px);
-        background-size: 40px 40px;
-        mask-image: radial-gradient(circle at 50% 50%, black, transparent 90%);
-      }
-
-      .glass-obsidian {
-        background: var(--glass-bg);
-        backdrop-filter: blur(24px) saturate(180%);
-        -webkit-backdrop-filter: blur(24px) saturate(180%);
-        border: 1px solid var(--app-border);
-      }
-
-      .glass-card {
-        background: var(--app-surface);
-        border: 1px solid var(--app-border);
-        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05);
-      }
-      
-      .dark .glass-card {
-        background: rgba(10, 10, 10, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 20px 60px -15px rgba(0,0,0,0.4);
-      }
-
-      .animate-spring-in {
-        animation: springIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.1) both;
-      }
-
-      @keyframes springIn {
-        from { transform: translateY(15px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-      }
-
-      .btn-shine:hover::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 50%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transform: skewX(-25deg);
-        animation: shine 0.75s forwards;
-      }
-
-      @keyframes shine {
-        100% { left: 150%; }
-      }
-
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+      .animate-reveal {
+        animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
       }
     </style>
   <script type="importmap">
@@ -165,9 +113,6 @@
 <link rel="stylesheet" href="/index.css">
 </head>
   <body class="antialiased">
-    <div class="obsidian-bg">
-      <div class="mesh-grid"></div>
-    </div>
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

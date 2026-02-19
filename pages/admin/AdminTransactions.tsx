@@ -109,10 +109,10 @@ const AdminTransactions: React.FC = () => {
                             </span>
                         </div>
                         <div className="text-xs text-gray-500 flex items-center gap-2">
-                            <Smartphone size={14} /> {(order as any).users?.phone || 'Buyer Node'}
+                            <Smartphone size={14} /> {(order as any).users?.phone || 'Customer Account'}
                         </div>
                         <div className="text-[10px] text-gray-600 font-mono mt-2 truncate max-w-sm">
-                            Ship To: {order.shipping_details || 'HQ Address'}
+                            Address: {order.shipping_details || 'Store Pickup'}
                         </div>
                     </div>
                 </div>

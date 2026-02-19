@@ -17,6 +17,8 @@ import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import ProductDetails from './pages/ProductDetails';
 import Cart from './pages/Cart';
+import TrackOrder from './pages/TrackOrder';
+import Wishlist from './pages/Wishlist';
 
 // Admin Pages
 import AdminLayout from './pages/admin/AdminLayout';
@@ -93,6 +95,8 @@ const App: React.FC = () => {
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/recharge" element={<ProtectedRoute><Recharge /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+              <Route path="/track" element={<ProtectedRoute><TrackOrder /></ProtectedRoute>} />
+              <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
               <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />

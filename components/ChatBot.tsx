@@ -16,25 +16,25 @@ interface ChatMessage {
 }
 
 const SYSTEM_INSTRUCTION = `
-You are the Innovative Gadget Shopping Assistant (IGA), a helpful concierge for our premium hardware store.
-Your goal is to help users find the best tech and manage their orders.
+You are the Innovative Gadget Shopping Assistant (IGA), a professional tech concierge.
+Your goal is to help users discover high-performance hardware and manage their purchases.
 
 We sell:
 - Laptops, Phones, Watches, Speakers, Smart Home gear, and Cameras.
 
 Rules:
-- Be professional, tech-savvy, and concise.
+- Strictly professional and hardware-focused. No financial advice or investment talk.
 - Use Markdown for clean formatting.
-- If users ask about their money, use tools to check their balance.
-- If users ask about orders, use tools to check their status.
+- If users ask about their credit, use tools to check their store balance.
+- If users ask about orders, use tools to check shipping status.
 - Our Orange Money number for top-ups is ${ORANGE_MONEY_NUMBER}.
 `;
 
 const vaultStatsTool: FunctionDeclaration = {
-  name: "get_vault_stats",
+  name: "get_wallet_stats",
   parameters: {
     type: Type.OBJECT,
-    description: "Check the user's available shopping credit and profile info.",
+    description: "Check the user's available store credit and account info.",
     properties: {}
   }
 };
@@ -52,7 +52,7 @@ const userPortfolioTool: FunctionDeclaration = {
   name: "get_user_orders",
   parameters: {
     type: Type.OBJECT,
-    description: "Retrieve the user's recent orders and tracking status.",
+    description: "Retrieve the user's recent orders and shipping status.",
     properties: {}
   }
 };
@@ -102,7 +102,7 @@ export const ChatBot: React.FC = () => {
         if (!user) return "Please login to access your shopping data.";
 
         switch (name) {
-            case "get_vault_stats":
+            case "get_wallet_stats":
                 return { balance: user.balance, phone: user.phone, currency: "SLE" };
             case "get_catalog":
                 const products = await getProducts();
@@ -159,17 +159,17 @@ export const ChatBot: React.FC = () => {
                     ...messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
                     { role: 'user', parts: [{ text: userMessage }] },
                     { role: 'model', parts: response.candidates[0].content.parts },
-                    { role: 'user', parts: [{ text: `Feedback: ${JSON.stringify(toolResults)}` }] }
+                    { role: 'user', parts: [{ text: `System Feedback: ${JSON.stringify(toolResults)}` }] }
                 ],
                 config
             });
             
-            setMessages(prev => [...prev, { role: 'model', text: secondResponse.text || "I analyzed your request. What else can I do for you?" }]);
+            setMessages(prev => [...prev, { role: 'model', text: secondResponse.text || "Hardware database synced. How else can I assist?" }]);
         } else {
-            setMessages(prev => [...prev, { role: 'model', text: response.text || "I am here to help." }]);
+            setMessages(prev => [...prev, { role: 'model', text: response.text || "I am here to help with your tech shopping." }]);
         }
       } catch (error) {
-        setMessages(prev => [...prev, { role: 'model', text: "Service temporarily interrupted. Please try again." }]);
+        setMessages(prev => [...prev, { role: 'model', text: "Support node busy. Please retry in a moment." }]);
       } finally { setIsLoading(false); }
     };
 
@@ -182,10 +182,10 @@ export const ChatBot: React.FC = () => {
                         <MessageSquareMore size={24} className="text-emerald-400" />
                     </div>
                     <div>
-                        <h3 className="font-black text-white text-base tracking-tighter uppercase leading-none">Gadget Agent</h3>
+                        <h3 className="font-black text-white text-base tracking-tighter uppercase leading-none">Gadget Support</h3>
                         <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                           Active Support Node
+                           Retail Concierge
                         </p>
                     </div>
                 </div>
@@ -221,7 +221,7 @@ export const ChatBot: React.FC = () => {
                 {isLoading && (
                     <div className="flex items-center gap-3 text-gray-500 text-[10px] font-black uppercase tracking-widest ml-12 md:ml-14 animate-pulse">
                         <Loader2 size={16} className="animate-spin text-emerald-500" />
-                        Fetching Store Intel...
+                        Analyzing Hardware...
                     </div>
                 )}
                 <div ref={messagesEndRef} />
@@ -230,10 +230,10 @@ export const ChatBot: React.FC = () => {
             {/* Quick Actions */}
             <div className="px-4 md:px-6 py-4 bg-[#0a0a0f]/80 flex gap-2 overflow-x-auto no-scrollbar border-t border-white/5">
                 {[
-                    { label: "Check Balance", icon: <Wallet size={12} />, text: "How much shopping credit do I have?" },
-                    { label: "My Orders", icon: <Package size={12} />, text: "Show me my recent orders and tracking." },
-                    { label: "Latest Tech", icon: <Zap size={12} />, text: "What are the hot new gadgets in stock?" },
-                    { label: "Shipping Info", icon: <Truck size={12} />, text: "How long does delivery usually take?" }
+                    { label: "Check Credit", icon: <Wallet size={12} />, text: "How much store credit do I have?" },
+                    { label: "My Orders", icon: <Package size={12} />, text: "Show me my recent purchases and tracking." },
+                    { label: "Latest Tech", icon: <Zap size={12} />, text: "What are the latest gadgets in stock?" },
+                    { label: "Delivery Speed", icon: <Truck size={12} />, text: "How long does shipping take?" }
                 ].map((act, i) => (
                     <button 
                         key={i}
@@ -252,7 +252,7 @@ export const ChatBot: React.FC = () => {
                         type="text" 
                         value={inputText} 
                         onChange={(e) => setInputText(e.target.value)} 
-                        placeholder="Ask about gadgets..." 
+                        placeholder="Search gadgets or orders..." 
                         className="flex-1 bg-transparent text-white placeholder-gray-600 text-[13px] md:text-sm focus:outline-none py-3" 
                     />
                     <button 

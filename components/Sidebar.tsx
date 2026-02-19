@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, ShoppingBag, User, LogOut, MessageSquareMore, Sun, Moon, ReceiptText } from 'lucide-react';
+import { Home, ShoppingBag, User, LogOut, MessageSquareMore, Sun, Moon, ReceiptText, LayoutGrid, Truck } from 'lucide-react';
 import { logoutUser } from '../services/storageService';
 import { useUI } from '../contexts/UIContext';
 import { useCart } from '../contexts/CartContext';
@@ -18,8 +18,10 @@ export const Sidebar: React.FC = () => {
   };
 
   const navItems = [
-    { name: 'SHOP', path: '/', icon: <ShoppingBag size={22} />, badge: true },
+    { name: 'SHOP', path: '/', icon: <LayoutGrid size={22} /> },
+    { name: 'CART', path: '/cart', icon: <ShoppingBag size={22} />, badge: true },
     { name: 'MY ORDERS', path: '/orders', icon: <ReceiptText size={22} /> },
+    { name: 'TRACKING', path: '/track', icon: <Truck size={22} /> },
     { name: 'ACCOUNT', path: '/dashboard', icon: <Home size={22} /> },
     { name: 'PROFILE', path: '/profile', icon: <User size={22} /> },
   ];
@@ -30,7 +32,7 @@ export const Sidebar: React.FC = () => {
         <Logo size={48} />
         <div>
           <h1 className="font-black text-xl text-slate-900 dark:text-white tracking-tighter uppercase leading-none">Innovative</h1>
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-500 uppercase tracking-widest font-black mt-1">Gadget Protocol</p>
+          <p className="text-[10px] text-emerald-600 dark:text-emerald-500 uppercase tracking-widest font-black mt-1">Tech Store</p>
         </div>
       </div>
 
@@ -71,7 +73,7 @@ export const Sidebar: React.FC = () => {
           className="flex items-center gap-4 px-4 py-3 w-full text-left text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-emerald-600 dark:hover:text-white rounded-2xl transition-all font-black text-xs tracking-widest"
         >
           <MessageSquareMore size={20} />
-          SUPPORT
+          HELP
         </button>
         <button 
           onClick={handleLogout}
