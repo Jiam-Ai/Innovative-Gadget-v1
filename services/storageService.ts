@@ -128,7 +128,7 @@ export const trackOrderById = async (trackingId: string): Promise<Order | null> 
 export const userConfirmDelivery = async (orderId: string) => {
   const user = getCurrentUser();
   if (!user) throw new Error("Unauthenticated session");
-  const { error } = await supabase.rpc('user_confirm_order_delivery_v2', { p_user_id: user.id, p_order_id: orderId });
+  const { error } = await supabase.rpc('user_finalize_order_protocol', { p_user_id: user.id, p_order_id: orderId });
   if (error) handleSupabaseError(error);
 };
 
@@ -193,7 +193,12 @@ export const adminRejectTransaction = async (txId: string) => {
 };
 
 export const adminUpdateOrderStatus = async (orderId: string, status: OrderStatus, trackingNumber: string = '') => {
-  await supabase.from('orders').update({ status, tracking_number: trackingNumber, updated_at: Date.now() }).eq('id', orderId);
+  const { error } = await supabase.rpc('admin_update_order_status_v8', { 
+    p_order_id: orderId, 
+    p_new_status: status, 
+    p_tracking: trackingNumber 
+  });
+  if (error) handleSupabaseError(error);
 };
 
 export const updateUserBalance = async (userId: string, balance: number) => {
@@ -222,8 +227,6 @@ export const getNotifications = async (userId: string) => {
 export const markNotificationRead = async (id: string) => {
   await supabase.from('notifications').update({ read: true }).eq('id', id);
 };
-
-// --- FIXES: Added missing functions ---
 
 // Withdrawal Logic
 export const createWithdrawal = async (userId: string, amount: number, details: string) => {
@@ -265,7 +268,6 @@ export const adminUpdateProduct = async (product: Partial<Product>) => {
 };
 
 export const uploadProductImage = async (file: File): Promise<string> => {
-  // Assuming a generic bucket named 'images' for this implementation
   const fileExt = file.name.split('.').pop();
   const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
   const filePath = `products/${fileName}`;
@@ -275,86 +277,147 @@ export const uploadProductImage = async (file: File): Promise<string> => {
   return data.publicUrl;
 };
 
-// User Purchased Hardware (Neural Sprints)
-export const getAllProducts = async (userId: string): Promise<UserProduct[]> => {
-  const { data } = await supabase.from('user_products').select('*').eq('user_id', userId);
-  return (data || []).map(d => ({
-    ...d,
-    userId: d.user_id,
-    vipName: d.vip_name,
-    dailyRate: d.daily_rate,
-    expiryDate: d.expiry_date,
-    lastRewardDate: d.last_reward_date
-  }));
-};
-
-// Earnings Process
+// earnings
 export const processAutomaticEarnings = async () => {
   await supabase.rpc('process_automatic_earnings');
 };
 
-// Staking Pools
+// --- Staking & Pools ---
+/**
+ * Fetches all available staking pools from the database.
+ */
 export const getStakingPools = async (): Promise<StakingPool[]> => {
-  const { data } = await supabase.from('staking_pools').select('*');
-  return data || [];
+  const { data, error } = await supabase.from('staking_pools').select('*');
+  if (error) return [];
+  return data;
 };
 
+/**
+ * Injects compute liquidity into a pool for a user.
+ */
 export const injectPoolLiquidity = async (userId: string, poolId: string, amount: number) => {
-  const { error } = await supabase.rpc('inject_staking_liquidity', { p_user_id: userId, p_pool_id: poolId, p_amount: amount });
-  if (error) throw error;
+  const { error } = await supabase.from('user_stakes').insert({ 
+    user_id: userId, 
+    pool_id: poolId, 
+    amount, 
+    staked_at: Date.now() 
+  });
+  if (error) handleSupabaseError(error);
 };
 
+/**
+ * Retrieves all stakes associated with a user.
+ */
 export const getUserStakes = async (userId: string): Promise<UserStake[]> => {
-  const { data } = await supabase.from('user_stakes').select('*').eq('user_id', userId);
-  return (data || []).map(d => ({ ...d, userId: d.user_id, poolId: d.pool_id, stakedAt: d.staked_at }));
+  const { data, error } = await supabase.from('user_stakes').select('*').eq('user_id', userId);
+  if (error) return [];
+  return data.map(s => ({ 
+    ...s, 
+    userId: s.user_id, 
+    poolId: s.pool_id, 
+    stakedAt: s.staked_at 
+  }));
 };
 
-// Bonds
+// --- Bonds ---
+/**
+ * Retrieves all available bond templates.
+ */
 export const getBondTemplates = async (): Promise<BondTemplate[]> => {
-  const { data } = await supabase.from('bond_templates').select('*');
-  return (data || []).map(d => ({
-    ...d,
-    tierLabel: d.tier_label,
-    durationDays: d.duration_days,
-    interestRatePercent: d.interest_rate_percent,
-    minInvestment: d.min_investment
+  const { data, error } = await supabase.from('bond_templates').select('*');
+  if (error) return [];
+  return data.map(b => ({ 
+    ...b, 
+    tierLabel: b.tier_label, 
+    durationDays: b.duration_days, 
+    interestRatePercent: b.interest_rate_percent, 
+    minInvestment: b.min_investment 
   }));
 };
 
+/**
+ * Executes a bond purchase contract for a user.
+ */
 export const purchaseBond = async (userId: string, templateId: string, amount: number) => {
-  const { error } = await supabase.rpc('purchase_bond', { p_user_id: userId, p_template_id: templateId, p_amount: amount });
-  if (error) throw error;
+  const { error } = await supabase.from('user_bonds').insert({ 
+    user_id: userId, 
+    template_id: templateId, 
+    amount, 
+    created_at: Date.now() 
+  });
+  if (error) handleSupabaseError(error);
 };
 
+/**
+ * Fetches all active bond contracts for a user.
+ */
 export const getUserBonds = async (userId: string): Promise<UserBond[]> => {
-  const { data } = await supabase.from('user_bonds').select('*').eq('user_id', userId);
-  return (data || []).map(d => ({
-    ...d,
-    userId: d.user_id,
-    bondName: d.bond_name,
-    endDate: d.end_date,
-    totalReturn: d.total_return
+  const { data, error } = await supabase.from('user_bonds').select('*').eq('user_id', userId);
+  if (error) return [];
+  return data.map(b => ({ 
+    ...b, 
+    userId: b.user_id, 
+    bondName: b.bond_name, 
+    endDate: b.end_date, 
+    totalReturn: b.total_return 
   }));
 };
 
-// Training Epochs
+// --- Epochs ---
+/**
+ * Retrieves all active training epochs.
+ */
 export const getTrainingEpochs = async (): Promise<TrainingEpoch[]> => {
-  const { data } = await supabase.from('training_epochs').select('*');
-  return (data || []).map(d => ({
-    ...d,
-    rewardMultiplier: d.reward_multiplier,
-    minInvestment: d.min_investment,
-    currentFilled: d.current_filled,
-    totalTarget: d.total_target
+  const { data, error } = await supabase.from('training_epochs').select('*');
+  if (error) return [];
+  return data.map(e => ({ 
+    ...e, 
+    rewardMultiplier: e.reward_multiplier, 
+    minInvestment: e.min_investment, 
+    currentFilled: e.current_filled, 
+    totalTarget: e.total_target 
   }));
 };
 
+/**
+ * Logs an investment in a specific training epoch.
+ */
 export const investInEpoch = async (userId: string, epochId: string, amount: number) => {
-  const { error } = await supabase.rpc('invest_in_epoch', { p_user_id: userId, p_epoch_id: epochId, p_amount: amount });
-  if (error) throw error;
+  const { error } = await supabase.from('user_epoch_investments').insert({ 
+    user_id: userId, 
+    epoch_id: epochId, 
+    amount, 
+    created_at: Date.now() 
+  });
+  if (error) handleSupabaseError(error);
 };
 
+/**
+ * Retrieves all epoch investments for a user.
+ */
 export const getUserEpochInvestments = async (userId: string): Promise<UserEpochInvestment[]> => {
-  const { data } = await supabase.from('user_epoch_investments').select('*').eq('user_id', userId);
-  return (data || []).map(d => ({ ...d, userId: d.user_id, epochId: d.epoch_id }));
+  const { data, error } = await supabase.from('user_epoch_investments').select('*').eq('user_id', userId);
+  if (error) return [];
+  return data.map(i => ({ 
+    ...i, 
+    userId: i.user_id, 
+    epochId: i.epoch_id 
+  }));
+};
+
+// --- User Products ---
+/**
+ * Fetches all active compute portfolios for a user.
+ */
+export const getAllProducts = async (userId: string): Promise<UserProduct[]> => {
+  const { data, error } = await supabase.from('user_products').select('*').eq('user_id', userId);
+  if (error) return [];
+  return data.map(p => ({ 
+    ...p, 
+    userId: p.user_id, 
+    vipName: p.vip_name, 
+    dailyRate: p.daily_rate, 
+    expiryDate: p.expiry_date, 
+    lastRewardDate: p.last_reward_date 
+  }));
 };
