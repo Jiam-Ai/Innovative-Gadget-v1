@@ -83,22 +83,56 @@ const Orders: React.FC = () => {
               <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest mt-1">Real-time gadget tracking</p>
            </div>
            
-           <div className="flex flex-wrap items-center gap-2">
+           <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
                 <select 
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-lg py-2.5 pl-8 pr-6 text-[9px] font-black uppercase text-white outline-none focus:border-emerald-500/50 appearance-none cursor-pointer"
+                  className="bg-white/5 border border-white/10 rounded-2xl py-3 pl-10 pr-8 text-[10px] font-black uppercase text-white outline-none focus:border-emerald-500/50 appearance-none cursor-pointer transition-all hover:bg-white/10 shadow-xl"
                 >
-                  <option value="ALL">ALL STATUS</option>
-                  <option value={OrderStatus.PENDING}>PENDING</option>
-                  <option value={OrderStatus.SHIPPED}>SHIPPED</option>
-                  <option value={OrderStatus.DELIVERED}>ARRIVED</option>
-                  <option value={OrderStatus.COMPLETED}>FINALIZED</option>
+                  <option value="ALL" className="bg-[#0a0a0f]">ALL STATUS</option>
+                  <option value={OrderStatus.PENDING} className="bg-[#0a0a0f]">PENDING</option>
+                  <option value={OrderStatus.PROCESSING} className="bg-[#0a0a0f]">PROCESSING</option>
+                  <option value={OrderStatus.SHIPPED} className="bg-[#0a0a0f]">SHIPPED</option>
+                  <option value={OrderStatus.DELIVERED} className="bg-[#0a0a0f]">ARRIVED</option>
+                  <option value={OrderStatus.COMPLETED} className="bg-[#0a0a0f]">FINALIZED</option>
                 </select>
               </div>
-              <button onClick={load} className="p-2.5 bg-white/5 border border-white/10 rounded-lg text-emerald-500 hover:bg-white/10 transition-all"><RefreshCcw size={14}/></button>
+
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-2xl p-1.5 shadow-xl">
+                 <div className="relative flex items-center">
+                   <Calendar className="absolute left-3 text-gray-500 pointer-events-none" size={14} />
+                   <input 
+                     type="date" 
+                     value={startDate}
+                     onChange={(e) => setStartDate(e.target.value)}
+                     className="bg-transparent py-1.5 pl-10 pr-2 text-[10px] font-black uppercase text-white outline-none focus:text-emerald-400 transition-colors cursor-pointer [color-scheme:dark]"
+                   />
+                 </div>
+                 <div className="h-4 w-[1px] bg-white/10" />
+                 <div className="relative flex items-center">
+                   <input 
+                     type="date" 
+                     value={endDate}
+                     onChange={(e) => setEndDate(e.target.value)}
+                     className="bg-transparent py-1.5 pl-2 pr-3 text-[10px] font-black uppercase text-white outline-none focus:text-emerald-400 transition-colors cursor-pointer [color-scheme:dark]"
+                   />
+                 </div>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setStatusFilter('ALL');
+                  setStartDate('');
+                  setEndDate('');
+                  load();
+                }} 
+                className="p-3.5 bg-white/5 border border-white/10 rounded-2xl text-emerald-500 hover:bg-white/10 transition-all shadow-xl active:scale-95 group"
+                title="Reset Filters"
+              >
+                <RefreshCcw size={16} className="group-active:rotate-180 transition-transform duration-500" />
+              </button>
            </div>
         </div>
 

@@ -86,7 +86,7 @@ const Cart: React.FC = () => {
                   <ShieldCheck size={48} className="text-emerald-500" />
               </div>
               <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">Order Confirmed</h2>
-              <p className="text-gray-500 text-sm max-w-xs mb-10 leading-relaxed font-medium">Your gadget request is now active on the neural grid.</p>
+              <p className="text-gray-500 text-sm max-w-xs mb-10 leading-relaxed font-medium">Your order is being processed in our system.</p>
               
               <div className="bg-[#0a0a0f] border border-emerald-500/20 rounded-[32px] p-8 w-full max-w-sm mb-10 shadow-2xl relative overflow-hidden group">
                   <div className="relative z-10">

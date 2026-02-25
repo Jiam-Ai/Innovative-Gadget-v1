@@ -125,14 +125,14 @@ export const ChatBot: React.FC = () => {
       setIsLoading(true);
 
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
         const config = { 
             systemInstruction: SYSTEM_INSTRUCTION,
             tools: [{ functionDeclarations: [vaultStatsTool, marketIntelligenceTool, userPortfolioTool] }]
         };
 
         const response = await ai.models.generateContent({
-          model: 'gemini-3-pro-preview', 
+          model: 'gemini-2.0-flash', 
           contents: [
               ...messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
               { role: 'user', parts: [{ text: userMessage }] }
@@ -154,7 +154,7 @@ export const ChatBot: React.FC = () => {
             }
 
             const secondResponse = await ai.models.generateContent({
-                model: 'gemini-3-pro-preview',
+                model: 'gemini-2.0-flash',
                 contents: [
                     ...messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
                     { role: 'user', parts: [{ text: userMessage }] },

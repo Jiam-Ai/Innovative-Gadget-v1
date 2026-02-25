@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { getAllUsers, updateUserBalance } from '../../services/storageService';
+import { getAllUsers, updateUserBalance, deleteUser } from '../../services/storageService';
 import { User } from '../../types';
-import { Search, Loader2, ShieldCheck, User as UserIcon, Edit2, Check, X, AlertCircle } from 'lucide-react';
+import { Search, Loader2, ShieldCheck, User as UserIcon, Edit2, Check, X, AlertCircle, Trash2 } from 'lucide-react';
 
 const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -31,6 +31,19 @@ const AdminUsers: React.FC = () => {
           setEditingUserId(null);
       } catch (e) {
           alert("Update failed");
+      } finally {
+          setUpdating(false);
+      }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+      if (!window.confirm("Are you sure you want to delete this user? This action is irreversible.")) return;
+      setUpdating(true);
+      try {
+          await deleteUser(userId);
+          await load();
+      } catch (e: any) {
+          alert("Delete failed: " + e.message);
       } finally {
           setUpdating(false);
       }
@@ -124,9 +137,20 @@ const AdminUsers: React.FC = () => {
                                     )}
                                 </td>
                                 <td className="px-6 lg:px-10 py-5 lg:py-6 text-right">
-                                    <button className="text-[8px] lg:text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:text-white bg-emerald-500/10 hover:bg-emerald-600 px-4 py-2 lg:px-5 lg:py-2.5 rounded-xl transition-all">
-                                        View Logs
-                                    </button>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <button className="text-[8px] lg:text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:text-white bg-emerald-500/10 hover:bg-emerald-600 px-4 py-2 lg:px-5 lg:py-2.5 rounded-xl transition-all">
+                                            Logs
+                                        </button>
+                                        {!u.isAdmin && (
+                                            <button 
+                                                onClick={() => handleDeleteUser(u.id)}
+                                                disabled={updating}
+                                                className="p-2.5 text-rose-500 hover:text-white hover:bg-rose-500 bg-rose-500/10 rounded-xl transition-all disabled:opacity-50"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ))

@@ -5,11 +5,10 @@ import {
     getAllUsers, 
     adminApproveDeposit, 
     adminRejectTransaction, 
-    adminApproveWithdrawal, 
-    processAutomaticEarnings
+    adminApproveWithdrawal
 } from '../services/storageService';
 import { Transaction, TransactionStatus, TransactionType, User } from '../types';
-import { Check, X, DollarSign, Loader2 } from 'lucide-react';
+import { Check, X, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Admin: React.FC = () => {
@@ -53,16 +52,6 @@ const Admin: React.FC = () => {
       setLoading(false);
   };
 
-  const handleRunEarnings = async () => {
-      setLoading(true);
-      // Fixed: triggerDailyEarnings was not exported from storageService, 
-      // used processAutomaticEarnings which is the intended logic.
-      await processAutomaticEarnings();
-      alert(`Daily earnings process triggered.`);
-      await loadData();
-      setLoading(false);
-  };
-
   const filteredTx = transactions.filter(t => {
       if (tab === 'deposits') return t.type === TransactionType.DEPOSIT;
       if (tab === 'withdrawals') return t.type === TransactionType.WITHDRAWAL;
@@ -74,9 +63,6 @@ const Admin: React.FC = () => {
       <div className="glass-panel p-4 sticky top-0 z-50 flex justify-between items-center border-b border-white/10">
         <h1 className="font-bold text-xl">Admin Console</h1>
         <div className="flex gap-3">
-            <button onClick={handleRunEarnings} className="text-xs bg-emerald-600 px-4 py-2 rounded-lg hover:bg-emerald-500 flex items-center gap-2 font-bold transition">
-                <DollarSign size={14} /> Run Pay
-            </button>
             <button onClick={() => navigate('/')} className="text-xs bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20 transition">
                 Exit
             </button>

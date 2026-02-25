@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { getTransactions, getAllUsers, adminApproveDeposit, adminRejectTransaction, getAllOrders, adminUpdateOrderStatus } from '../../services/storageService';
+import { getTransactions, getAllUsers, adminApproveDeposit, adminRejectTransaction, adminApproveWithdrawal, getAllOrders, adminUpdateOrderStatus } from '../../services/storageService';
 import { Transaction, TransactionStatus, TransactionType, User, Order, OrderStatus } from '../../types';
 import { 
     Check, 
@@ -51,11 +51,24 @@ const AdminTransactions: React.FC = () => {
 
   useEffect(() => { load(); }, []);
 
-  const handleTxAction = async (id: string, action: 'APPROVE' | 'REJECT') => {
+  const handleTxAction = async (tx: Transaction, action: 'APPROVE' | 'REJECT') => {
     setLoading(true);
-    if (action === 'REJECT') await adminRejectTransaction(id);
-    else await adminApproveDeposit(id);
-    await load();
+    try {
+        if (action === 'REJECT') {
+            await adminRejectTransaction(tx.id);
+        } else {
+            if (tx.type === TransactionType.DEPOSIT) {
+                await adminApproveDeposit(tx.id);
+            } else if (tx.type === TransactionType.WITHDRAWAL) {
+                await adminApproveWithdrawal(tx.id);
+            }
+        }
+        await load();
+    } catch (err: any) {
+        alert(err.message);
+    } finally {
+        setLoading(false);
+    }
   };
 
   const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {
@@ -223,8 +236,8 @@ const AdminTransactions: React.FC = () => {
                 <span className="text-2xl font-black text-white">SLE {tx.amount.toLocaleString()}</span>
                 {tx.status === TransactionStatus.PENDING && (
                     <div className="flex gap-2">
-                        <button onClick={() => handleTxAction(tx.id, 'APPROVE')} className="w-12 h-12 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-900/20"><Check size={20} /></button>
-                        <button onClick={() => handleTxAction(tx.id, 'REJECT')} className="w-12 h-12 bg-white/5 text-rose-500 rounded-xl border border-white/10 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all"><X size={20} /></button>
+                        <button onClick={() => handleTxAction(tx, 'APPROVE')} className="w-12 h-12 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-900/20"><Check size={20} /></button>
+                        <button onClick={() => handleTxAction(tx, 'REJECT')} className="w-12 h-12 bg-white/5 text-rose-500 rounded-xl border border-white/10 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all"><X size={20} /></button>
                     </div>
                 )}
             </div>

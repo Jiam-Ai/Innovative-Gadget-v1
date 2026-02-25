@@ -40,7 +40,7 @@ const Recharge: React.FC = () => {
                 <ShieldCheck size={72} className="text-emerald-400" />
              </div>
              <h2 className="text-3xl font-black text-white mb-3 tracking-tighter uppercase">Protocol Sent</h2>
-             <p className="text-gray-500 mb-10 max-w-xs leading-relaxed font-medium">Your payment is being validated by the neural network. Funds will appear in your wallet shortly.</p>
+             <p className="text-gray-500 mb-10 max-w-xs leading-relaxed font-medium">Your payment is being validated. Funds will appear in your wallet shortly.</p>
              <button onClick={() => navigate('/dashboard')} className="w-full max-w-xs h-16 bg-emerald-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Back to Dashboard</button>
         </div>
     );

@@ -21,6 +21,8 @@ const AdminPackages: React.FC = () => {
       stock_quantity: 50
   });
 
+  const CATEGORIES = ['Laptops', 'Phones', 'Watches', 'Speakers', 'Cameras', 'Accessories', 'Tablets', 'Gaming'];
+
   const load = async () => {
     setLoading(true);
     const data = await getProducts();
@@ -31,19 +33,24 @@ const AdminPackages: React.FC = () => {
   useEffect(() => { load(); }, []);
 
   const handleCreate = async () => {
-    if (!newProduct.name || !newProduct.price) return;
+    if (!newProduct.name || !newProduct.price) {
+      alert("Please fill in product name and price.");
+      return;
+    }
     setLoading(true);
     try {
-        const payload = { ...newProduct };
-        if (!payload.image_url && payload.images && payload.images.length > 0) {
-            payload.image_url = payload.images[0];
-        }
+        const payload = { 
+          ...newProduct, 
+          image_url: newProduct.images && newProduct.images.length > 0 ? newProduct.images[0] : 'https://placehold.co/400x400/1a1a1a/ffffff?text=No+Image'
+        };
         await adminCreateProduct(payload);
         setShowAddModal(false);
         setNewProduct({ name: '', description: '', price: 0, image_url: '', images: [], category: 'Laptops', stock_quantity: 50 });
         await load();
-    } catch (e) {
-        alert("Failed to save product.");
+        alert("Product created successfully!");
+    } catch (e: any) {
+        console.error('Product creation error:', e);
+        alert("Failed to save product: " + (e.message || "Unknown error"));
     } finally {
         setLoading(false);
     }
@@ -61,7 +68,8 @@ const AdminPackages: React.FC = () => {
         }
         setNewProduct({ ...newProduct, images: uploadedUrls });
     } catch (err: any) {
-        alert("Upload Protocol Error.");
+        console.error('Upload error:', err);
+        alert("Upload failed: " + (err.message || "Please check your connection"));
     } finally {
         setUploading(false);
     }
@@ -160,13 +168,23 @@ const AdminPackages: React.FC = () => {
                           />
                       </div>
                       
+                      <div className="space-y-1.5">
+                          <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Description</label>
+                          <textarea 
+                            value={newProduct.description}
+                            onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs text-white focus:outline-none focus:border-emerald-500/50 min-h-[80px]"
+                            placeholder="Product features and specifications..."
+                          />
+                      </div>
+                      
                       <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1.5">
                               <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Price (SLE)</label>
                               <input 
                                 type="number" 
                                 value={newProduct.price}
-                                onChange={(e) => setNewProduct({...newProduct, price: parseFloat(e.target.value)})}
+                                onChange={(e) => setNewProduct({...newProduct, price: parseFloat(e.target.value) || 0})}
                                 className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs text-white focus:outline-none focus:border-emerald-500/50"
                                 placeholder="0"
                               />
@@ -176,7 +194,7 @@ const AdminPackages: React.FC = () => {
                               <input 
                                 type="number" 
                                 value={newProduct.stock_quantity}
-                                onChange={(e) => setNewProduct({...newProduct, stock_quantity: parseInt(e.target.value)})}
+                                onChange={(e) => setNewProduct({...newProduct, stock_quantity: parseInt(e.target.value) || 0})}
                                 className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs text-white focus:outline-none focus:border-emerald-500/50"
                                 placeholder="50"
                               />
@@ -184,7 +202,21 @@ const AdminPackages: React.FC = () => {
                       </div>
 
                       <div className="space-y-1.5">
+                          <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Category</label>
+                          <select
+                            value={newProduct.category}
+                            onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs text-white focus:outline-none focus:border-emerald-500/50"
+                          >
+                            {CATEGORIES.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                      </div>
+
+                      <div className="space-y-1.5">
                           <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Visual Array</label>
+                          <p className="text-[8px] text-gray-600 mb-2">Click to upload images from your device</p>
                           <div className="grid grid-cols-5 gap-2">
                               {newProduct.images?.map((img, idx) => (
                                   <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 bg-black group">

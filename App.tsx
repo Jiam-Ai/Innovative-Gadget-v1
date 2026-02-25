@@ -1,5 +1,6 @@
 
 import React from 'react';
+// App Core Refreshed
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from './services/storageService';
 import { UIProvider } from './contexts/UIContext';
@@ -89,8 +90,8 @@ const App: React.FC = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               
-              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-              <Route path="/product/:id" element={<ProtectedRoute><ProductDetails /></ProtectedRoute>} />
+              <Route path="/" element={<Home />} />
+              <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/recharge" element={<ProtectedRoute><Recharge /></ProtectedRoute>} />
