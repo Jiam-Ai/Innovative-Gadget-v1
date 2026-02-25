@@ -60,8 +60,10 @@ const Orders: React.FC = () => {
     try {
       await userConfirmDelivery(id);
       await load();
-    } catch (e) {
-      alert("Error confirming order.");
+      alert("Order confirmed successfully!");
+    } catch (e: any) {
+      console.error('Confirm error:', e);
+      alert("Error confirming order: " + (e.message || "Unknown error"));
     } finally {
       setConfirmingId(null);
     }

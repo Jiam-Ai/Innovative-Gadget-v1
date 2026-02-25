@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { getProducts, adminCreateProduct, adminUpdateProduct, uploadProductImage } from '../../services/storageService';
+import { getProducts, adminCreateProduct, adminUpdateProduct, uploadProductImage, adminDeleteProduct } from '../../services/storageService';
 import { Product } from '../../types';
 import { Plus, Package, Edit2, X, Image as ImageIcon, Loader2, Save, Upload, Check, Trash2, Search } from 'lucide-react';
 
@@ -81,6 +81,21 @@ const AdminPackages: React.FC = () => {
       setNewProduct({ ...newProduct, images: updated });
   };
 
+  const handleDelete = async (productId: string) => {
+    if (!window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) return;
+    setLoading(true);
+    try {
+      await adminDeleteProduct(productId);
+      await load();
+      alert("Product deleted successfully!");
+    } catch (e: any) {
+      console.error('Delete error:', e);
+      alert("Failed to delete product: " + (e.message || "Unknown error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
@@ -141,7 +156,7 @@ const AdminPackages: React.FC = () => {
 
                   <div className="flex gap-1.5 mt-auto">
                       <button className="flex-1 py-1.5 text-[8px] font-black uppercase bg-white/5 hover:bg-emerald-600 text-gray-400 hover:text-white rounded-lg border border-white/5 transition-all">Quick Edit</button>
-                      <button className="p-1.5 bg-white/5 text-gray-600 rounded-lg hover:text-rose-500 transition-all border border-white/5"><Trash2 size={12} /></button>
+                      <button onClick={() => handleDelete(pkg.id)} className="p-1.5 bg-white/5 text-gray-600 rounded-lg hover:text-rose-500 transition-all border border-white/5"><Trash2 size={12} /></button>
                   </div>
               </div>
           ))}

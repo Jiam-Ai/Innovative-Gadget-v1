@@ -112,51 +112,91 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
   return data.map(o => ({ ...o, product_name: o.products?.name, product_image: o.products?.image_url }));
 };
 
-export const trackOrderById = async (trackingId: string): Promise<Order | null> => {
-    const { data, error } = await supabase.from('orders').select('*, products(name, image_url)').eq('tracking_number', trackingId).maybeSingle();
-    if (error || !data) return null;
-    return { ...data, product_name: data.products?.name, product_image: data.products?.image_url };
+export const trackOrderById = async (searchId: string): Promise<Order | null> => {
+    if (!searchId || searchId.trim() === '') return null;
+    
+    const search = searchId.trim().toUpperCase();
+    
+    // Try RPC function first (most reliable)
+    const { data, error } = await supabase.rpc('track_order', { p_search_id: search });
+    
+    if (!error && data && data.length > 0) {
+        const order = data[0];
+        return {
+            ...order,
+            product_name: order.product_name,
+            product_image: order.product_image
+        };
+    }
+    
+    // Fallback: direct query with ilike
+    const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select('*, products(name, image_url)')
+        .or(`tracking_number.ilike.${search},id.ilike.${search}`)
+        .limit(1)
+        .maybeSingle();
+    
+    if (orderError) {
+        console.error('Track order error:', orderError);
+        return null;
+    }
+    
+    if (orderData) {
+        return {
+            ...orderData,
+            product_name: orderData.products?.name,
+            product_image: orderData.products?.image_url
+        };
+    }
+    
+    return null;
 };
 
 export const userConfirmDelivery = async (orderId: string) => {
   const user = getCurrentUser();
   if (!user) throw new Error("Unauthenticated session");
   
-  // Try RPC first
-  const { error } = await supabase.rpc('user_finalize_order_protocol', { p_user_id: user.id, p_order_id: orderId });
+  console.log('Confirming delivery for order:', orderId, 'user:', user.id);
+  
+  // Use the new function that also expires tracking
+  const { error } = await supabase.rpc('user_confirm_delivery', { 
+    p_user_id: user.id, 
+    p_order_id: orderId 
+  });
+  
+  console.log('RPC result:', error ? error.message : 'success');
   
   if (error) {
-    // Fallback: try the alternative function
-    const { error: error2 } = await supabase.rpc('user_confirm_order_delivery_v2', { p_user_id: user.id, p_order_id: orderId });
+    // Fallback: direct update
+    console.warn('Confirm delivery RPC failed, using fallback:', error.message);
     
-    if (error2) {
-      // Final fallback: direct table update
-      console.warn('RPC failed, using direct update:', error2.message);
+    const { data: order } = await supabase.from('orders').select('user_id, status').eq('id', orderId).eq('user_id', user.id).single();
+    
+    console.log('Order data:', order);
+    
+    if (order && (order.status === 'DELIVERED' || order.status === 'SHIPPED')) {
+      const { error: updateError } = await supabase.from('orders').update({
+        status: 'COMPLETED',
+        tracking_number: null, // Expire tracking
+        updated_at: Date.now()
+      }).eq('id', orderId);
       
-      const { data: order } = await supabase.from('orders').select('user_id, status').eq('id', orderId).eq('user_id', user.id).single();
-      
-      if (order && (order.status === 'DELIVERED' || order.status === 'SHIPPED')) {
-        const { error: updateError } = await supabase.from('orders').update({ 
-          status: 'COMPLETED',
-          updated_at: Date.now()
-        }).eq('id', orderId);
-        
-        if (!updateError) {
-          // Create notification
-          const notifId = 'NOTIF-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-          await supabase.from('notifications').insert({
-            id: notifId,
-            user_id: user.id,
-            title: 'Order Received',
-            message: `You confirmed receipt of order ${orderId}`,
-            date: Date.now(),
-            type: 'success'
-          });
-        }
-      } else {
-        handleSupabaseError(error2);
+      if (!updateError) {
+        // Create notification
+        const notifId = 'NOTIF-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        await supabase.from('notifications').insert({
+          id: notifId,
+          user_id: user.id,
+          title: 'Order Completed',
+          message: `Thank you! Order ${orderId} is complete. Tracking expired.`,
+          date: Date.now(),
+          type: 'success'
+        });
+        return;
       }
     }
+    throw new Error(error.message || 'Failed to confirm delivery');
   }
 };
 
@@ -223,52 +263,57 @@ export const adminRejectTransaction = async (txId: string) => {
 };
 
 export const adminUpdateOrderStatus = async (orderId: string, status: OrderStatus, trackingNumber: string = '') => {
-  // Try RPC first
-  const { error } = await supabase.rpc('admin_update_order_status_v8', { 
-    p_order_id: orderId, 
-    p_new_status: status, 
-    p_tracking: trackingNumber 
-  });
+  // Try specific functions first based on status
+  let success = false;
   
-  if (error) {
-    // Fallback: Direct table update if RPC fails
-    console.warn('RPC failed, using direct update:', error.message);
-    const { data: order } = await supabase.from('orders').select('user_id').eq('id', orderId).single();
+  if (status === OrderStatus.SHIPPED) {
+    // Use admin_ship_order which generates tracking
+    const { data, error } = await supabase.rpc('admin_ship_order', { 
+      p_order_id: orderId, 
+      p_tracking_number: trackingNumber || null 
+    });
+    if (!error) {
+      console.log('Order shipped with tracking:', data);
+      success = true;
+    } else {
+      console.warn('Ship RPC failed:', error.message);
+    }
+  } else if (status === OrderStatus.DELIVERED) {
+    const { error } = await supabase.rpc('admin_deliver_order', { p_order_id: orderId });
+    if (!error) success = true;
+    else console.warn('Deliver RPC failed:', error.message);
+  }
+  
+  if (!success) {
+    // Fallback: use generic update function
+    console.warn('Using fallback update_order_status');
+    const { error } = await supabase.rpc('update_order_status', {
+      p_order_id: orderId,
+      p_new_status: status,
+      p_tracking: trackingNumber
+    });
     
-    if (order) {
-      const { error: updateError } = await supabase.from('orders').update({ 
-        status: status,
-        tracking_number: trackingNumber || undefined,
-        updated_at: Date.now()
-      }).eq('id', orderId);
-      
-      if (updateError) {
-        // Create notification directly
-        const notifId = 'NOTIF-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        await supabase.from('notifications').insert({
-          id: notifId,
-          user_id: order.user_id,
-          title: 'Order Status Update',
-          message: `Your order ${orderId} has been updated to: ${status}`,
-          date: Date.now(),
-          type: 'info'
-        });
+    if (error) {
+      // Final fallback: direct update
+      const { data: order } = await supabase.from('orders').select('user_id').eq('id', orderId).single();
+      if (order) {
+        await supabase.from('orders').update({
+          status: status,
+          tracking_number: trackingNumber || undefined,
+          updated_at: Date.now()
+        }).eq('id', orderId);
         
-        if (updateError) handleSupabaseError(updateError);
-      } else {
-        // Create notification on successful update
+        // Create notification
         const notifId = 'NOTIF-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         await supabase.from('notifications').insert({
           id: notifId,
           user_id: order.user_id,
-          title: 'Order Status Update',
-          message: `Your order ${orderId} has been updated to: ${status}`,
+          title: 'Order Update',
+          message: `Order ${orderId} status: ${status}`,
           date: Date.now(),
           type: 'info'
         });
       }
-    } else {
-      handleSupabaseError(error);
     }
   }
 };
@@ -281,6 +326,18 @@ export const updateUserBalance = async (userId: string, balance: number) => {
 export const adminCreateProduct = async (product: Partial<Product>) => {
   const { error } = await supabase.from('products').insert({ ...product, created_at: Date.now(), is_active: true });
   if (error) handleSupabaseError(error);
+};
+
+export const adminDeleteProduct = async (productId: string) => {
+  // Try RPC first
+  const { error } = await supabase.rpc('admin_delete_product', { p_product_id: productId });
+  
+  if (error) {
+    // Fallback: direct delete
+    console.warn('RPC failed, using direct delete:', error.message);
+    const { error: deleteError } = await supabase.from('products').delete().eq('id', productId);
+    if (deleteError) handleSupabaseError(deleteError);
+  }
 };
 
 export const checkoutCart = async (userId: string, totalAmount: number, shippingData: any) => {

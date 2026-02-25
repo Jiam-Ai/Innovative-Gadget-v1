@@ -35,13 +35,19 @@ const TrackOrder: React.FC = () => {
     setError(false);
     setOrder(null);
     try {
-      const data = await trackOrderById(id.toUpperCase());
+      const searchId = id.trim().toUpperCase();
+      console.log('Searching for:', searchId);
+      
+      const data = await trackOrderById(searchId);
+      console.log('Track result:', data);
+      
       if (data) {
         setOrder(data);
       } else {
         setError(true);
       }
     } catch (e) {
+      console.error('Track error:', e);
       setError(true);
     } finally {
       setLoading(false);
